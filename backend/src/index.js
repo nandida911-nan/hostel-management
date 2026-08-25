@@ -48,8 +48,11 @@ app.use('/api/mess-menu', messRoutes);
 app.use('/api/notices', noticesRoutes);
 
 // 404 handler
-app.use('/api/*', (req, res) => {
-  res.status(404).json({ error: `API route ${req.originalUrl} not found.` });
+app.use((req, res) => {
+  if (req.originalUrl.startsWith('/api')) {
+    return res.status(404).json({ error: `API route ${req.originalUrl} not found.` });
+  }
+  res.status(404).send('Not Found');
 });
 
 // Error handling middleware
