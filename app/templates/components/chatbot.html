@@ -1,0 +1,239 @@
+<!-- Floating AI Chatbot Assistant -->
+<div id="chatbot-container" class="fixed bottom-6 right-6 z-50">
+    <!-- Chat Toggle Button -->
+    <button id="chatbot-toggle-btn" onclick="toggleChatbot()" class="group relative flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-xl hover:shadow-emerald-500/30 hover:scale-105 active:scale-95 transition-all duration-200">
+        <i data-lucide="bot" class="w-6 h-6 group-hover:rotate-6 transition-transform"></i>
+        <span class="absolute -top-1 -right-1 flex h-3.5 w-3.5">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-white"></span>
+        </span>
+    </button>
+
+    <!-- Chat Dialog Window -->
+    <div id="chatbot-modal" class="hidden flex-col w-[380px] sm:w-[420px] h-[540px] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden transition-all duration-300 transform origin-bottom-right">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-slate-900 to-slate-800 text-white px-5 py-4 flex items-center justify-between shadow-sm">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold">
+                    <i data-lucide="sparkles" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-sm leading-tight flex items-center gap-1.5">
+                        EcoHostel AI
+                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    </h3>
+                    <p class="text-[11px] text-slate-400">Smart Resource & Hostel Assistant</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-1">
+                <button onclick="clearChat()" title="Clear Chat" class="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-700 transition">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+                <button onclick="toggleChatbot()" class="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-700 transition">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Chat History -->
+        <div id="chatbot-messages" class="flex-1 p-4 overflow-y-auto space-y-3 bg-slate-50 text-xs sm:text-sm">
+            <!-- Initial AI Greeting -->
+            <div class="flex items-start gap-2.5">
+                <div class="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center flex-shrink-0 text-xs">
+                    <i data-lucide="bot" class="w-4 h-4"></i>
+                </div>
+                <div class="bg-white border border-slate-200 p-3 rounded-2xl rounded-tl-none shadow-sm text-slate-800 max-w-[85%]">
+                    <p class="font-semibold text-xs text-emerald-700 mb-1">HostelPulse Assistant</p>
+                    <p>Hi {{ current_user.name.split(' ')[0] }}! 👋 I'm your automated hostel & utility assistant. Ask me about **curfew hours**, **out-passes**, **maintenance tickets**, or **electricity optimization tips**!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Suggestion Chips Container -->
+        <div id="chatbot-suggestions" class="px-3 py-2 bg-slate-100/70 border-t border-slate-200 flex items-center gap-1.5 overflow-x-auto text-[11px]">
+            <button onclick="sendQuickPrompt('What is curfew time?')" class="whitespace-nowrap px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-700 hover:border-emerald-500 hover:text-emerald-700 transition shadow-xs font-medium">🕒 Curfew hours</button>
+            <button onclick="sendQuickPrompt('How to apply for outpass?')" class="whitespace-nowrap px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-700 hover:border-emerald-500 hover:text-emerald-700 transition shadow-xs font-medium">🚪 Out-pass rules</button>
+            <button onclick="sendQuickPrompt('How can I save electricity in my room?')" class="whitespace-nowrap px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-700 hover:border-emerald-500 hover:text-emerald-700 transition shadow-xs font-medium">⚡ Energy tips</button>
+            <button onclick="sendQuickPrompt('How to submit a maintenance ticket?')" class="whitespace-nowrap px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-700 hover:border-emerald-500 hover:text-emerald-700 transition shadow-xs font-medium">🔧 Maintenance</button>
+        </div>
+
+        <!-- Input Box -->
+        <form id="chatbot-form" onsubmit="handleChatSubmit(event)" class="p-3 bg-white border-t border-slate-200 flex items-center gap-2">
+            <input 
+                type="text" 
+                id="chatbot-input" 
+                placeholder="Ask about out-passes, power, tickets..." 
+                class="flex-1 px-3.5 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition"
+                autocomplete="off"
+            />
+            <button 
+                type="submit" 
+                id="chatbot-send-btn"
+                class="p-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white transition shadow-sm flex items-center justify-center flex-shrink-0">
+                <i data-lucide="send" class="w-4 h-4"></i>
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    let isChatOpen = false;
+
+    function toggleChatbot() {
+        const modal = document.getElementById('chatbot-modal');
+        const toggleBtn = document.getElementById('chatbot-toggle-btn');
+        isChatOpen = !isChatOpen;
+        
+        if (isChatOpen) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            toggleBtn.classList.add('hidden');
+            setTimeout(() => document.getElementById('chatbot-input').focus(), 100);
+        } else {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            toggleBtn.classList.remove('hidden');
+        }
+        lucide.createIcons();
+    }
+
+    function clearChat() {
+        const messages = document.getElementById('chatbot-messages');
+        messages.innerHTML = `
+            <div class="flex items-start gap-2.5">
+                <div class="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center flex-shrink-0 text-xs">
+                    <i data-lucide="bot" class="w-4 h-4"></i>
+                </div>
+                <div class="bg-white border border-slate-200 p-3 rounded-2xl rounded-tl-none shadow-sm text-slate-800 max-w-[85%]">
+                    <p class="font-semibold text-xs text-emerald-700 mb-1">HostelPulse Assistant</p>
+                    <p>Chat history cleared! How can I assist you with hostel utilities, out-passes, or maintenance?</p>
+                </div>
+            </div>
+        `;
+        lucide.createIcons();
+    }
+
+    function sendQuickPrompt(text) {
+        document.getElementById('chatbot-input').value = text;
+        handleChatSubmit(new Event('submit'));
+    }
+
+    async function handleChatSubmit(event) {
+        event.preventDefault();
+        const input = document.getElementById('chatbot-input');
+        const text = input.value.trim();
+        if (!text) return;
+
+        input.value = '';
+        appendUserMessage(text);
+
+        // Append typing indicator
+        const typingId = appendTypingIndicator();
+
+        try {
+            const res = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: text })
+            });
+            const data = await res.json();
+            
+            removeTypingIndicator(typingId);
+            
+            if (data.reply) {
+                appendBotMessage(data.reply);
+            } else {
+                appendBotMessage("Sorry, I couldn't process that request right now.");
+            }
+
+            // Update suggestions if any
+            if (data.suggestions && data.suggestions.length > 0) {
+                renderSuggestions(data.suggestions);
+            }
+        } catch (err) {
+            removeTypingIndicator(typingId);
+            appendBotMessage("An error occurred while connecting to the assistant.");
+        }
+    }
+
+    function appendUserMessage(text) {
+        const container = document.getElementById('chatbot-messages');
+        const bubble = document.createElement('div');
+        bubble.className = 'flex items-start justify-end gap-2.5';
+        bubble.innerHTML = `
+            <div class="bg-emerald-600 text-white p-3 rounded-2xl rounded-tr-none shadow-sm max-w-[85%]">
+                <p class="text-xs sm:text-sm">${escapeHtml(text)}</p>
+            </div>
+        `;
+        container.appendChild(bubble);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function appendBotMessage(markdownText) {
+        const container = document.getElementById('chatbot-messages');
+        const bubble = document.createElement('div');
+        bubble.className = 'flex items-start gap-2.5';
+        
+        // Simple format for bold and line breaks
+        let formatted = escapeHtml(markdownText)
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\n/g, '<br/>');
+
+        bubble.innerHTML = `
+            <div class="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center flex-shrink-0 text-xs">
+                <i data-lucide="bot" class="w-4 h-4"></i>
+            </div>
+            <div class="bg-white border border-slate-200 p-3 rounded-2xl rounded-tl-none shadow-sm text-slate-800 max-w-[85%] leading-relaxed">
+                <p class="text-xs sm:text-sm">${formatted}</p>
+            </div>
+        `;
+        container.appendChild(bubble);
+        container.scrollTop = container.scrollHeight;
+        lucide.createIcons();
+    }
+
+    function appendTypingIndicator() {
+        const container = document.getElementById('chatbot-messages');
+        const id = 'typing-' + Date.now();
+        const bubble = document.createElement('div');
+        bubble.id = id;
+        bubble.className = 'flex items-start gap-2.5';
+        bubble.innerHTML = `
+            <div class="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center flex-shrink-0 text-xs">
+                <i data-lucide="bot" class="w-4 h-4"></i>
+            </div>
+            <div class="bg-white border border-slate-200 px-4 py-2.5 rounded-2xl rounded-tl-none shadow-sm text-slate-400 flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce"></span>
+                <span class="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce [animation-delay:0.2s]"></span>
+                <span class="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce [animation-delay:0.4s]"></span>
+            </div>
+        `;
+        container.appendChild(bubble);
+        container.scrollTop = container.scrollHeight;
+        lucide.createIcons();
+        return id;
+    }
+
+    function removeTypingIndicator(id) {
+        const el = document.getElementById(id);
+        if (el) el.remove();
+    }
+
+    function renderSuggestions(suggestions) {
+        const container = document.getElementById('chatbot-suggestions');
+        container.innerHTML = suggestions.map(s => `
+            <button onclick="sendQuickPrompt('${escapeHtml(s)}')" class="whitespace-nowrap px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-700 hover:border-emerald-500 hover:text-emerald-700 transition shadow-xs font-medium">
+                ${escapeHtml(s)}
+            </button>
+        `).join('');
+    }
+
+    function escapeHtml(str) {
+        return str
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+</script>

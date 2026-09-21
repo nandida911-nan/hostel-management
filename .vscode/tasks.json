@@ -1,0 +1,21 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Start HostelPulse Server",
+            "type": "shell",
+            "command": "python run_prod.py",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Run Tests",
+            "type": "shell",
+            "command": "python -m unittest tests/test_app.py",
+            "problemMatcher": []
+        }
+    ]
+}

@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}Digital Out-Pass - {{ outpass.pass_number }}{% endblock %}
+{% block header_title %}Digital Security Gate Pass{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto my-6">
+    <div class="mb-4">
+        <a href="{{ url_for('student.outpass') }}" class="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-slate-800 transition">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            <span>Back to All Out-Passes</span>
+        </a>
+    </div>
+
+    <!-- Pass Card (Modern Boarding-Pass style) -->
+    <div class="bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-xl shadow-slate-200/70">
+        <!-- Pass Header -->
+        <div class="bg-gradient-to-r from-slate-900 to-emerald-950 p-6 text-white relative">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                        <i data-lucide="shield-check" class="w-5 h-5"></i>
+                    </div>
+                    <span class="font-bold text-xs tracking-wider uppercase text-emerald-300">Official Gate Out-Pass</span>
+                </div>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-500 text-white uppercase">
+                    {{ outpass.status }}
+                </span>
+            </div>
+
+            <div class="mt-4">
+                <p class="text-[11px] text-slate-400 uppercase tracking-wider font-semibold">Destination</p>
+                <h2 class="text-2xl font-black text-white mt-0.5 tracking-tight">{{ outpass.destination }}</h2>
+                <p class="text-xs text-emerald-300 mt-1 capitalize">{{ outpass.pass_type }} Pass &bull; Token: {{ outpass.pass_number }}</p>
+            </div>
+        </div>
+
+        <!-- Pass Body Details -->
+        <div class="p-6 space-y-4">
+            <div class="grid grid-cols-2 gap-4 pb-4 border-b border-slate-100 text-xs">
+                <div>
+                    <span class="text-slate-400 font-semibold uppercase text-[10px]">Student Name</span>
+                    <p class="font-bold text-slate-800 text-sm mt-0.5">{{ outpass.student.name }}</p>
+                    <p class="text-[11px] text-slate-500">{{ outpass.student.student_id_num or 'STU-REGISTERED' }}</p>
+                </div>
+                <div>
+                    <span class="text-slate-400 font-semibold uppercase text-[10px]">Room Allocation</span>
+                    <p class="font-bold text-slate-800 text-sm mt-0.5">
+                        {{ 'Room ' + outpass.student.room.room_number if outpass.student.room else 'Hostel Resident' }}
+                    </p>
+                    <p class="text-[11px] text-slate-500">{{ outpass.student.room.block if outpass.student.room else '' }}</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 pb-4 border-b border-slate-100 text-xs">
+                <div>
+                    <span class="text-slate-400 font-semibold uppercase text-[10px]">Departure Time</span>
+                    <p class="font-bold text-slate-800 mt-0.5">{{ outpass.departure_time.strftime('%b %d, %Y') }}</p>
+                    <p class="text-xs text-slate-600 font-mono">{{ outpass.departure_time.strftime('%I:%M %p') }}</p>
+                </div>
+                <div>
+                    <span class="text-slate-400 font-semibold uppercase text-[10px]">Curfew / Expected Return</span>
+                    <p class="font-bold text-slate-800 mt-0.5">{{ outpass.expected_return_time.strftime('%b %d, %Y') }}</p>
+                    <p class="text-xs text-emerald-700 font-mono font-bold">{{ outpass.expected_return_time.strftime('%I:%M %p') }}</p>
+                </div>
+            </div>
+
+            <!-- QR Verification Placeholder -->
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/70 flex flex-col items-center text-center">
+                <div class="w-32 h-32 bg-white p-2 border border-slate-300 rounded-xl shadow-xs flex items-center justify-center">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={{ outpass.qr_token }}" alt="Verification QR Code" class="w-full h-full object-contain">
+                </div>
+                <p class="text-[11px] font-mono text-slate-500 mt-2">Security Verification Token</p>
+                <p class="text-[10px] font-mono text-slate-400">{{ outpass.qr_token }}</p>
+            </div>
+
+            <div class="text-xs text-slate-600 pt-2 text-center">
+                <p class="italic">"{{ outpass.reason }}"</p>
+                <p class="text-[11px] text-slate-400 mt-1">Authorized by Chief Warden Office on {{ outpass.reviewed_at.strftime('%b %d, %Y') if outpass.reviewed_at else 'Verified' }}</p>
+            </div>
+        </div>
+
+        <!-- Print / Save button -->
+        <div class="p-4 bg-slate-50 border-t border-slate-100 text-center">
+            <button onclick="window.print()" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition">
+                <i data-lucide="printer" class="w-4 h-4"></i>
+                <span>Print or Save Pass</span>
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}

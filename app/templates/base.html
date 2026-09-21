@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-50 antialiased">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}HostelPulse AI{% endblock %} - Smart Hostel & Utility Optimizer</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        dialog::backdrop {
+            background-color: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(4px);
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col font-sans text-slate-800">
+    <div class="min-h-full flex flex-row">
+        <!-- Sidebar Navigation -->
+        {% if current_user.is_authenticated %}
+        <aside class="w-64 bg-slate-900 text-slate-200 flex flex-col flex-shrink-0 min-h-screen border-r border-slate-800 shadow-xl transition-all duration-300">
+            <!-- Brand header -->
+            <div class="h-16 flex items-center px-6 border-b border-slate-800 gap-3">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
+                    <i data-lucide="zap" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-base text-white tracking-tight flex items-center gap-1.5">
+                        HostelPulse <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-semibold uppercase">AI</span>
+                    </h1>
+                    <p class="text-[11px] text-slate-400">Utility & Resource Hub</p>
+                </div>
+            </div>
+
+            <!-- Role Badge -->
+            <div class="px-5 py-4 border-b border-slate-800/60 bg-slate-950/40">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-sm text-emerald-400">
+                        {{ current_user.name[0] }}
+                    </div>
+                    <div class="overflow-hidden">
+                        <p class="text-sm font-medium text-white truncate">{{ current_user.name }}</p>
+                        <span class="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full font-semibold {{ 'bg-purple-900/40 text-purple-300 border border-purple-800/50' if current_user.is_warden else 'bg-blue-900/40 text-blue-300 border border-blue-800/50' }}">
+                            <span class="w-1.5 h-1.5 rounded-full {{ 'bg-purple-400' if current_user.is_warden else 'bg-blue-400' }}"></span>
+                            {{ current_user.role.upper() }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nav Links -->
+            <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+                {% if current_user.is_student %}
+                <!-- Student Links -->
+                <p class="px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-2">Student Portal</p>
+                
+                <a href="{{ url_for('student.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-slate-800 hover:text-white {% if request.endpoint == 'student.dashboard' %}bg-emerald-600/20 text-emerald-400 border-l-4 border-emerald-500{% else %}text-slate-300{% endif %}">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
+                </a>
+                <a href="{{ url_for('student.room_view') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-slate-800 hover:text-white {% if request.endpoint == 'student.room_view' %}bg-emerald-600/20 text-emerald-400 border-l-4 border-emerald-500{% else %}text-slate-300{% endif %}">
+                    <i data-lucide="home" class="w-4 h-4"></i> My Room & Booking
+                </a>
+                <a href="{{ url_for('student.tickets') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-slate-800 hover:text-white {% if request.endpoint == 'student.tickets' %}bg-emerald-600/20 text-emerald-400 border-l-4 border-emerald-500{% else %}text-slate-300{% endif %}">
+                    <i data-lucide="wrench" class="w-4 h-4"></i> Maintenance Tickets
+                </a>
+                <a href="{{ url_for('student.outpass') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-slate-800 hover:text-white {% if request.endpoint in ['student.outpass', 'student.view_pass_card'] %}bg-emerald-600/20 text-emerald-400 border-l-4 border-emerald-500{% else %}text-slate-300{% endif %}">
+                    <i data-lucide="log-out" class="w-4 h-4"></i> Out-Pass Requests
+                </a>
+                <a href="{{ url_for('student.issues') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-slate-800 hover:text-white {% if request.endpoint == 'student.issues' %}bg-emerald-600/20 text-emerald-400 border-l-4 border-emerald-500{% else %}text-slate-300{% endif %}">
+                    <i data-lucide="alert-triangle" class="w-4 h-4"></i> Issue Reporting
+                </a>
+                <a href="{{ url_for('student.utility') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-slate-800 hover:text-white {% if request.endpoint == 'student.utility' %}bg-emerald-600/20 text-emerald-400 border-l-4 border-emerald-500{% else %}text-slate-300{% endif %}">
+                    <i data-lucide="zap" class="w-4 h-4"></i> Electricity & Eco Score
+                </a>
+
+                {% else %}
+                <!-- Warden Links -->
+                <p class="px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-2">Warden Portal</p>
+                
+                <a href="{{ url_for('warden.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-slate-800 hover:text-white {% if request.endpoint == 'warden.dashboard' %}bg-emerald-600/20 text-emerald-400 border-l-4 border-emerald-500{% else %}text-slate-300{% endif %}">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Master Dashboard
+                </a>
+                <a href="{{ url_for('warden.rooms') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-slate-800 hover:text-white {% if request.endpoint == 'warden.rooms' %}bg-emerald-600/20 text-emerald-400 border-l-4 border-emerald-500{% else %}text-slate-300{% endif %}">
+                    <i data-lucide="door-open" class="w-4 h-4"></i> Room Allocations
+                </a>
+                <a href="{{ url_for('warden.tickets') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-slate-800 hover:text-white {% if request.endpoint == 'warden.tickets' %}bg-emerald-600/20 text-emerald-400 border-l-4 border-emerald-500{% else %}text-slate-300{% endif %}">
+                    <i data-lucide="wrench" class="w-4 h-4"></i> Maintenance Triage
+                </a>
+                <a href="{{ url_for('warden.outpasses') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-slate-800 hover:text-white {% if request.endpoint == 'warden.outpasses' %}bg-emerald-600/20 text-emerald-400 border-l-4 border-emerald-500{% else %}text-slate-300{% endif %}">
+                    <i data-lucide="clipboard-check" class="w-4 h-4"></i> Out-Pass Approvals
+                </a>
+                <a href="{{ url_for('warden.issues') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-slate-800 hover:text-white {% if request.endpoint == 'warden.issues' %}bg-emerald-600/20 text-emerald-400 border-l-4 border-emerald-500{% else %}text-slate-300{% endif %}">
+                    <i data-lucide="alert-octagon" class="w-4 h-4"></i> Issue Desk
+                </a>
+                <a href="{{ url_for('utility.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-slate-800 hover:text-white {% if request.endpoint == 'utility.index' %}bg-emerald-600/20 text-emerald-400 border-l-4 border-emerald-500{% else %}text-slate-300{% endif %}">
+                    <i data-lucide="line-chart" class="w-4 h-4"></i> ML Utility Analytics
+                </a>
+                {% endif %}
+
+                <!-- Shared link to Utility Center -->
+                {% if current_user.is_student %}
+                <div class="pt-3">
+                    <p class="px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-2">Hostel Grid</p>
+                    <a href="{{ url_for('utility.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-slate-800 hover:text-white {% if request.endpoint == 'utility.index' %}bg-emerald-600/20 text-emerald-400 border-l-4 border-emerald-500{% else %}text-slate-300{% endif %}">
+                        <i data-lucide="cpu" class="w-4 h-4"></i> Grid Forecast & ML
+                    </a>
+                </div>
+                {% endif %}
+            </nav>
+
+            <!-- User Footer -->
+            <div class="p-3 border-t border-slate-800/80 bg-slate-950/60">
+                <div class="flex items-center justify-between">
+                    <a href="{{ url_for('auth.profile') }}" class="flex items-center gap-2 text-xs text-slate-400 hover:text-white py-1 px-2 rounded hover:bg-slate-800 transition">
+                        <i data-lucide="user-cog" class="w-4 h-4"></i> Profile
+                    </a>
+                    <a href="{{ url_for('auth.logout') }}" class="flex items-center gap-2 text-xs text-rose-400 hover:text-rose-300 py-1 px-2 rounded hover:bg-rose-950/40 transition">
+                        <i data-lucide="log-out" class="w-4 h-4"></i> Log out
+                    </a>
+                </div>
+            </div>
+        </aside>
+        {% endif %}
+
+        <!-- Main Body Area -->
+        <div class="flex-1 flex flex-col min-w-0 bg-slate-50">
+            <!-- Top App Bar -->
+            <header class="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-20 shadow-sm">
+                <div class="flex items-center gap-4">
+                    <h2 class="text-lg font-bold text-slate-800 tracking-tight">{% block header_title %}HostelPulse{% endblock %}</h2>
+                    <span class="hidden sm:inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Power Grid: Stable (42.8 kW)
+                    </span>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    {% if current_user.is_authenticated %}
+                    <button onclick="toggleChatbot()" class="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-full bg-slate-900 text-white hover:bg-slate-800 transition shadow-sm">
+                        <i data-lucide="bot" class="w-3.5 h-3.5 text-emerald-400"></i>
+                        <span>AI Assistant</span>
+                    </button>
+                    <div class="text-right hidden md:block">
+                        <p class="text-xs font-semibold text-slate-700 leading-none">{{ current_user.name }}</p>
+                        <p class="text-[10px] text-slate-400 mt-0.5">{{ current_user.email }}</p>
+                    </div>
+                    {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="text-sm font-semibold text-slate-700 hover:text-emerald-600 transition">Log In</a>
+                    <a href="{{ url_for('auth.register') }}" class="text-sm font-semibold px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition shadow-sm">Register</a>
+                    {% endif %}
+                </div>
+            </header>
+
+            <!-- Flash Alerts -->
+            <div class="px-6 pt-4 max-w-7xl mx-auto w-full">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            {% set alert_classes = {
+                                'success': 'bg-emerald-50 text-emerald-800 border-emerald-200',
+                                'danger': 'bg-rose-50 text-rose-800 border-rose-200',
+                                'warning': 'bg-amber-50 text-amber-800 border-amber-200',
+                                'info': 'bg-sky-50 text-sky-800 border-sky-200'
+                            } %}
+                            <div class="p-4 mb-4 rounded-xl border {{ alert_classes.get(category, 'bg-slate-100 text-slate-800 border-slate-300') }} flex items-center justify-between text-sm shadow-sm transition">
+                                <div class="flex items-center gap-3">
+                                    <i data-lucide="{{ 'check-circle' if category == 'success' else 'alert-circle' }}" class="w-5 h-5 flex-shrink-0"></i>
+                                    <span>{{ message }}</span>
+                                </div>
+                                <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600 p-1">
+                                    <i data-lucide="x" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+            </div>
+
+            <!-- Page Content -->
+            <main class="flex-1 px-6 py-6 max-w-7xl mx-auto w-full">
+                {% block content %}{% endblock %}
+            </main>
+
+            <!-- Footer -->
+            <footer class="bg-white border-t border-slate-200 py-4 px-6 text-center text-xs text-slate-400">
+                <p>HostelPulse AI &copy; 2026 - Automated Hostel Utility Optimization & Predictive Resource Management System.</p>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Floating AI Chatbot Widget -->
+    {% if current_user.is_authenticated %}
+    {% include 'components/chatbot.html' %}
+    {% endif %}
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

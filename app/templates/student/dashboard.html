@@ -1,0 +1,286 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Dashboard - HostelPulse AI{% endblock %}
+{% block header_title %}Student Hub{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Welcome Banner -->
+    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 p-6 sm:p-8 text-white shadow-xl">
+        <div class="relative z-10 max-w-2xl">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 mb-3">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Smart Hostel Automated System
+            </span>
+            <h1 class="text-2xl sm:text-3xl font-black tracking-tight">Good day, {{ current_user.name }}!</h1>
+            <p class="text-sm text-slate-300 mt-2 leading-relaxed">
+                {% if room %}
+                    Your room is <strong class="text-emerald-400">Room {{ room.room_number }}</strong> in {{ room.block }}. All hostel utilities and facilities are active and monitored.
+                {% else %}
+                    You do not have a room assigned yet. Please visit the <a href="{{ url_for('student.room_view') }}" class="text-emerald-400 underline font-semibold">Room Booking</a> tab to select one.
+                {% endif %}
+            </p>
+        </div>
+        <div class="absolute -right-8 -bottom-8 opacity-10 pointer-events-none text-emerald-400">
+            <i data-lucide="building" class="w-64 h-64"></i>
+        </div>
+    </div>
+
+    <!-- 4 High-Impact Metric Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Room Status -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
+                <i data-lucide="home" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <p class="text-xs font-semibold uppercase text-slate-400">Allocated Room</p>
+                <p class="text-lg font-bold text-slate-800">{{ room.room_number if room else 'None' }}</p>
+                <p class="text-[11px] text-slate-500">{{ room.block if room else 'Pending Allocation' }}</p>
+            </div>
+        </div>
+
+        <!-- Room Electricity Usage -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                <i data-lucide="zap" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <p class="text-xs font-semibold uppercase text-slate-400">Daily Electricity</p>
+                <div class="flex items-baseline gap-1.5">
+                    <p class="text-lg font-bold text-slate-800">{{ daily_usage }}</p>
+                    <span class="text-xs font-semibold text-slate-500">kWh/day</span>
+                </div>
+                <p class="text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
+                    <span class="px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 text-[10px]">Rating {{ energy_rating }}</span>
+                    Eco Score: Optimal
+                </p>
+            </div>
+        </div>
+
+        <!-- Open Maintenance Tickets -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
+                <i data-lucide="wrench" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <p class="text-xs font-semibold uppercase text-slate-400">Active Tickets</p>
+                <p class="text-lg font-bold text-slate-800">{{ open_tickets_count }}</p>
+                <p class="text-[11px] text-slate-500">
+                    <a href="{{ url_for('student.tickets') }}" class="text-emerald-600 hover:underline">View tickets &rarr;</a>
+                </p>
+            </div>
+        </div>
+
+        <!-- Out-Pass Status -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center flex-shrink-0">
+                <i data-lucide="log-out" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <p class="text-xs font-semibold uppercase text-slate-400">Latest Out-Pass</p>
+                {% if recent_outpass %}
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold mt-0.5 {{ 'bg-emerald-100 text-emerald-800' if recent_outpass.status == 'approved' else ('bg-amber-100 text-amber-800' if recent_outpass.status == 'pending' else 'bg-slate-100 text-slate-700') }}">
+                        {{ recent_outpass.status.upper() }}
+                    </span>
+                    <p class="text-[11px] text-slate-400 truncate max-w-[120px]">{{ recent_outpass.destination }}</p>
+                {% else %}
+                    <p class="text-xs text-slate-400">No active pass</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Middle Grid: Room Details & Quick Actions -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Room Information & Roommates -->
+        <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs lg:col-span-2">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 rounded-xl bg-slate-100 text-slate-700">
+                        <i data-lucide="users" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-800">Room Details & Roommates</h3>
+                        <p class="text-xs text-slate-400">Your current residential status</p>
+                    </div>
+                </div>
+                {% if room %}
+                <span class="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700">
+                    Floor {{ room.floor }} &bull; {{ room.room_type }}
+                </span>
+                {% endif %}
+            </div>
+
+            {% if room %}
+            <div class="mt-5 space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100 text-xs">
+                    <div>
+                        <span class="text-slate-400 font-medium">Room Number</span>
+                        <p class="font-bold text-slate-800 text-sm mt-0.5">{{ room.room_number }}</p>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 font-medium">Block & Wing</span>
+                        <p class="font-bold text-slate-800 text-sm mt-0.5">{{ room.block }}</p>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 font-medium">Occupancy</span>
+                        <p class="font-bold text-slate-800 text-sm mt-0.5">{{ room.occupants|length }} / {{ room.capacity }} students</p>
+                    </div>
+                </div>
+
+                <!-- Roommates List -->
+                <div>
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Roommates</h4>
+                    {% if roommates %}
+                    <div class="divide-y divide-slate-100 border border-slate-100 rounded-2xl overflow-hidden">
+                        {% for rm in roommates %}
+                        <div class="p-3.5 flex items-center justify-between bg-white hover:bg-slate-50 transition">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center text-xs">
+                                    {{ rm.name[0] }}
+                                </div>
+                                <div>
+                                    <p class="text-xs font-bold text-slate-800">{{ rm.name }}</p>
+                                    <p class="text-[11px] text-slate-400">{{ rm.student_id_num or 'Student' }}</p>
+                                </div>
+                            </div>
+                            <span class="text-xs text-slate-500">{{ rm.phone or rm.email }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-xs text-slate-400 italic p-3 bg-slate-50 rounded-xl">No roommates in this room yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center py-8">
+                <i data-lucide="door-closed" class="w-12 h-12 text-slate-300 mx-auto mb-3"></i>
+                <h4 class="text-base font-bold text-slate-700">No Room Allocated</h4>
+                <p class="text-xs text-slate-500 max-w-sm mx-auto mt-1">Select an available room or contact the warden office to finalize your accommodation.</p>
+                <a href="{{ url_for('student.room_view') }}" class="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 transition">
+                    Browse Available Rooms
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Quick Actions & Eco Advice -->
+        <div class="space-y-6">
+            <!-- Quick Action Cards -->
+            <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs">
+                <h3 class="font-bold text-slate-800 text-sm mb-4">Quick Actions</h3>
+                <div class="grid grid-cols-2 gap-3">
+                    <a href="{{ url_for('student.outpass') }}" class="p-3.5 rounded-2xl bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-100 transition flex flex-col items-center text-center gap-2 group">
+                        <div class="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition">
+                            <i data-lucide="log-out" class="w-5 h-5"></i>
+                        </div>
+                        <span class="text-xs font-bold">Apply Out-Pass</span>
+                    </a>
+
+                    <a href="{{ url_for('student.tickets') }}" class="p-3.5 rounded-2xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-100 transition flex flex-col items-center text-center gap-2 group">
+                        <div class="w-10 h-10 rounded-xl bg-amber-600 text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition">
+                            <i data-lucide="wrench" class="w-5 h-5"></i>
+                        </div>
+                        <span class="text-xs font-bold">Report Repair</span>
+                    </a>
+
+                    <a href="{{ url_for('student.issues') }}" class="p-3.5 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-900 border border-rose-100 transition flex flex-col items-center text-center gap-2 group">
+                        <div class="w-10 h-10 rounded-xl bg-rose-600 text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition">
+                            <i data-lucide="alert-octagon" class="w-5 h-5"></i>
+                        </div>
+                        <span class="text-xs font-bold">Report Issue</span>
+                    </a>
+
+                    <button onclick="toggleChatbot()" class="p-3.5 rounded-2xl bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-100 transition flex flex-col items-center text-center gap-2 group">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition">
+                            <i data-lucide="bot" class="w-5 h-5"></i>
+                        </div>
+                        <span class="text-xs font-bold">AI Assistant</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Smart Energy Saving Tip -->
+            <div class="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-3xl p-5 text-white shadow-md">
+                <div class="flex items-center gap-2 mb-2">
+                    <i data-lucide="lightbulb" class="w-5 h-5 text-yellow-300"></i>
+                    <h4 class="font-bold text-xs uppercase tracking-wider text-emerald-200">AI Energy Tip of the Day</h4>
+                </div>
+                <p class="text-xs leading-relaxed text-emerald-50">
+                    Setting room AC thermostats to <strong>24°C</strong> instead of 18°C lowers compressor workload and saves up to <strong>18%</strong> daily power!
+                </p>
+                <div class="mt-4 pt-3 border-t border-emerald-500/50 flex items-center justify-between text-[11px]">
+                    <span class="text-emerald-200">Carbon saved: ~0.8 kg/day</span>
+                    <a href="{{ url_for('student.utility') }}" class="font-bold underline hover:text-emerald-200">Details &rarr;</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Out-Pass & Maintenance Tickets Preview -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Recent Tickets -->
+        <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <h3 class="font-bold text-slate-800 text-sm">Your Maintenance Tickets</h3>
+                <a href="{{ url_for('student.tickets') }}" class="text-xs font-bold text-emerald-600 hover:underline">View All</a>
+            </div>
+            <div class="mt-4 space-y-3">
+                {% if tickets %}
+                    {% for t in tickets %}
+                    <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/60 flex items-center justify-between text-xs">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600">
+                                <i data-lucide="wrench" class="w-4 h-4"></i>
+                            </div>
+                            <div>
+                                <p class="font-bold text-slate-800">{{ t.title }}</p>
+                                <p class="text-[11px] text-slate-400 capitalize">{{ t.category }} &bull; Priority: {{ t.priority }}</p>
+                            </div>
+                        </div>
+                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold {{ 'bg-emerald-100 text-emerald-800' if t.status == 'resolved' else ('bg-blue-100 text-blue-800' if t.status == 'in_progress' else 'bg-amber-100 text-amber-800') }}">
+                            {{ t.status.replace('_', ' ').upper() }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-xs text-slate-400 italic text-center py-4">No maintenance tickets logged yet.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Recent Out-Passes -->
+        <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <h3 class="font-bold text-slate-800 text-sm">Out-Pass Activity</h3>
+                <a href="{{ url_for('student.outpass') }}" class="text-xs font-bold text-emerald-600 hover:underline">View All</a>
+            </div>
+            <div class="mt-4 space-y-3">
+                {% if recent_outpasses %}
+                    {% for p in recent_outpasses %}
+                    <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/60 flex items-center justify-between text-xs">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <p class="font-bold text-slate-800">{{ p.destination }}</p>
+                                <span class="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase {{ 'bg-emerald-100 text-emerald-800' if p.status == 'approved' else ('bg-amber-100 text-amber-800' if p.status == 'pending' else 'bg-rose-100 text-rose-800') }}">
+                                    {{ p.status }}
+                                </span>
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-0.5">Depart: {{ p.departure_time.strftime('%b %d, %H:%M') }} &bull; Pass: {{ p.pass_number }}</p>
+                        </div>
+                        {% if p.status == 'approved' %}
+                        <a href="{{ url_for('student.view_pass_card', pass_id=p.id) }}" class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-[11px] font-semibold hover:bg-emerald-700 transition">
+                            View Pass
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-xs text-slate-400 italic text-center py-4">No out-passes requested yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

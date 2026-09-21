@@ -1,65 +1,101 @@
-# 🏢 HostelEase — College Hostel Management System
+# ⚡ HostelPulse AI
+### Automated Hostel Utility Optimization & Predictive Resource Management Dashboard
 
-A full-stack web application designed to digitize daily campus living—replacing manual registers and paperwork for room allocations, out-passes with QR verification, maintenance complaints, digital mess menu, and campus announcements.
+**HostelPulse AI** is a full-stack automated hostel management and predictive resource management platform built with **Python (Flask)**, **SQLAlchemy**, and **Scikit-Learn**. It empowers both Students and Wardens with role-based portals, automated maintenance ticketing, out-pass approval workflows with digital QR passes, and machine learning-powered electricity load forecasting and power surge anomaly detection.
+
+*(Note: In accordance with institutional scope, food/mess and water resource management are strictly excluded).*
 
 ---
 
-## 🚀 How to Run on Your Laptop
+## 🌟 Key Features
 
-### Quick Start (Single Command)
-Open **PowerShell** or **Terminal** in the project root (`d:\Hostel management`) and run:
+### 👨🎓 Student Portal
+- **Dashboard & Profile**: Real-time room occupancy, assigned roommate details, and personal electricity eco-rating.
+- **Room Booking & Allocations**: Browse available hostel rooms with vacancies and reserve beds.
+- **Maintenance Tickets**: File facility repairs (Electrical, AC/Cooling, Appliances, Furniture, WiFi, Door Lock) with priority ratings and live technician notes.
+- **Out-Pass Workflow**: Apply for Day, Weekend, or Emergency gate passes with emergency contacts and destination tracking.
+- **Digital Pass with QR Verification**: Verified digital gate pass with an encrypted QR token for security gate scanning.
+- **Issue & Grievance Desk**: Report electrical outages, noise disturbances, and building hazards directly to authorities.
+- **Room Electricity Telemetry**: Monitor daily kWh intake, eco scores, carbon footprint, and green hostel achievement badges.
 
+### 👨💼 Warden Portal
+- **Master Command Center**: Executive KPI analytics tracking overall hostel occupancy, bed capacities, open tickets, and real-time power demand (kW).
+- **Room Allocation Grid**: Manage all hostel blocks (Block A, Block B, Block C) and assign/reassign students.
+- **Maintenance Triage**: Review pending issues, assign technicians, add resolution notes, and update statuses.
+- **Out-Pass Approval Desk**: Review gate requests with 1-click Approve/Reject and live monitoring of students currently outside hostel premises.
+- **Grievance Resolution**: Respond to student issue reports with official resolutions.
+
+### ⚡ Smart Electricity & Utility Optimization
+- **Real-Time Telemetry**: Live power demand (kW), daily consumption (kWh), estimated utility costs ($), and carbon footprint (kg CO2).
+- **ML Load Forecasting (Scikit-Learn)**:
+  - `RandomForestRegressor` trained on multi-factor features: hour, day of week, exam periods, ambient temperature, and occupancy.
+  - Predicts 24-hour hourly load curves and 7-day forward demand.
+  - `IsolationForest` anomaly detector flagging unauthorized heavy appliances (e.g. heating coils) and power surges.
+- **Interactive ML Simulation**: Live sliders for occupancy, temperature, and academic exam phase that dynamically re-render prediction curves without page reload.
+- **Automated Conservation Directives**: Actionable optimization rules (24°C AC thermostat rule, off-peak dimming, vampire standby isolation).
+
+### 🤖 24/7 AI Chatbot Assistant
+- Floating `EcoHostel AI` assistant available across all pages.
+- Answers queries regarding gate curfew hours, out-pass procedures, ticket logging, and energy conservation tips with quick-suggestion prompt chips.
+
+---
+
+## 🚀 Quick Start
+
+### 1. Prerequisites
+- Python 3.10+ installed
+- Git
+
+### 2. Clone and Setup
 ```bash
-npm run dev
+git clone <your-repository-url>
+cd "Hostel management"
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Initialize database & train initial ML models
+python seed_data.py
 ```
 
-This single command starts:
-- 🚀 **Backend Express API Server**: `http://localhost:5000`
-- 💻 **Frontend React Web Portal**: `http://localhost:5173`
+### 3. Run the Application
+```bash
+# Production WSGI Server (Waitress)
+python run_prod.py
 
-Now open **[http://localhost:5173](http://localhost:5173)** in your browser!
+# Or Development Mode
+python wsgi.py
+```
+Open **[http://localhost:5000](http://localhost:5000)** in your web browser.
 
 ---
 
-## 🔑 Demo Login Accounts (For Guide & Viva Presentation)
+## 🔑 Default Demo Accounts
 
-The login screen includes **1-Click Quick Demo Login Buttons** to switch between user roles in 1 second:
-
-| Role | Demo Email | Password | What to Demo |
+| Role | Email | Password | Details |
 | :--- | :--- | :--- | :--- |
-| 🎓 **Student** | `student@campus.edu` | `student123` | Apply for Night Out-Pass, View High-Res QR Gate Pass, File Maintenance Tickets, View 7-Day Mess Menu |
-| 🛡️ **Warden / Admin** | `warden@campus.edu` | `warden123` | Review & Approve Out-Pass Requests, Room Allocation Matrix & Bed Occupancy, Assign Technicians, Broadcast Notices |
-| 🚪 **Gate Security** | `security@campus.edu` | `guard123` | Search Roll No (`22CS101`) or Scan QR, Instant **APPROVED (Green)** / **INVALID (Red)** check, 1-Click Check-Out & Check-In Logger |
+| **Student** | `student@hostel.edu` | `student123` | Nandida K (Room 101, Block A) |
+| **Warden / Admin** | `warden@hostel.edu` | `admin123` | Dr. Arthur Vance (Chief Warden) |
 
 ---
 
-## 🌟 Core Features & Workflows
-
-### 1. Student Portal
-- **Out-Pass with Dynamic QR Code**: Apply for night out, weekend leave, or emergency passes. Once approved by the warden, a tamper-proof cryptographically signed QR code appears ready for scanning.
-- **Maintenance Helpdesk**: File complaint tickets (Electrical, Plumbing, Wi-Fi, Carpentry) and track status in real-time (`OPEN` ➔ `IN PROGRESS` ➔ `RESOLVED`).
-- **7-Day Mess Schedule**: Interactive weekly dining menu for Breakfast, Lunch, Evening Snacks, and Dinner with special items.
-- **Urgent Campus Broadcasts**: Read real-time announcements posted by hostel administration.
-
-### 2. Warden & Admin Dashboard
-- **Out-Pass Approvals Queue**: Review pending applications, view student & parent contact numbers, and approve or reject with one click.
-- **Room Allocation Matrix**: Visual block/floor grid showing occupied vs. available beds with instant student room allocation modals.
-- **Complaint Ticket Dispatch**: Assign campus electricians and plumbers to open tickets and track resolution progress.
-- **Notice Board Publisher**: Broadcast urgent or general notices to all residents.
-
-### 3. Gate Security Portal
-- **Rapid Roll No & QR Verification**: Search student roll number (e.g. `22CS101`) or scan QR code.
-- **Visual Status Banner**:
-  - 🟢 **APPROVED FOR CHECKOUT**: Student is cleared to leave campus.
-  - 🔵 **VALID FOR CHECKIN**: Student is currently outside and cleared to re-enter.
-  - 🔴 **PENDING / REJECTED / EXPIRED**: Unapproved student cannot leave gate.
-- **Gate Movement Register**: Automatically logs timestamps and guard IDs for check-outs and check-ins.
+## 🧪 Running Tests
+```bash
+python -m unittest tests/test_app.py
+```
 
 ---
 
-## 🏗️ Tech Stack
+## 🌐 Cloud Deployment
 
-- **Frontend**: React 19, Vite, Tailwind CSS, Lucide Icons
-- **Backend**: Node.js, Express, Better-SQLite3, JSON Web Tokens (JWT), Bcrypt, QRCode
-- **Database**: SQLite (`backend/data/hostel.db`)
-- **Version Control**: Git
+The repository includes production deployment configurations:
+- **Render**: `render.yaml`
+- **Railway / Heroku**: `Procfile`
+- **Docker**: `Dockerfile` & `docker-compose.yml`
+
+For complete instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
+
+---
+
+## 📄 License
+MIT License.

@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block title %}Room Allocation & Booking - HostelPulse AI{% endblock %}
+{% block header_title %}Room Allocation{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    {% if room %}
+    <!-- Already Assigned Room View -->
+    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xs">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+            <div>
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    Currently Allocated
+                </span>
+                <h2 class="text-2xl font-black text-slate-800 mt-2">Room {{ room.room_number }}</h2>
+                <p class="text-sm text-slate-500">{{ room.block }} &bull; Floor {{ room.floor }} &bull; {{ room.room_type }}</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold">
+                    Capacity: {{ room.occupants|length }}/{{ room.capacity }}
+                </span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+            <!-- Amenities Card -->
+            <div class="p-5 rounded-2xl bg-slate-50 border border-slate-100">
+                <h3 class="font-bold text-xs uppercase tracking-wider text-slate-500 mb-3 flex items-center gap-2">
+                    <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600"></i> Room Features
+                </h3>
+                <ul class="space-y-2 text-xs text-slate-700">
+                    <li class="flex items-center gap-2">
+                        <i data-lucide="wifi" class="w-4 h-4 text-slate-400"></i> High-speed WiFi 6 AP
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <i data-lucide="wind" class="w-4 h-4 text-slate-400"></i> Energy-efficient Climate Control
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <i data-lucide="table" class="w-4 h-4 text-slate-400"></i> Individual Study Desks & Wardrobes
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <i data-lucide="cpu" class="w-4 h-4 text-slate-400"></i> Smart IoT Energy Sub-Meter
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Energy Consumption -->
+            <div class="p-5 rounded-2xl bg-emerald-50/60 border border-emerald-100">
+                <h3 class="font-bold text-xs uppercase tracking-wider text-emerald-800 mb-3 flex items-center gap-2">
+                    <i data-lucide="zap" class="w-4 h-4 text-emerald-600"></i> Room Energy Telemetry
+                </h3>
+                <p class="text-2xl font-black text-slate-800">{{ room.daily_avg_kwh }} <span class="text-xs font-normal text-slate-500">kWh/day</span></p>
+                <p class="text-xs text-slate-600 mt-1">Target allowance: 6.0 kWh/day</p>
+                <div class="w-full bg-emerald-200 h-2 rounded-full overflow-hidden mt-3">
+                    <div class="bg-emerald-600 h-full rounded-full" style="width: {{ (room.daily_avg_kwh / 6.0 * 100)|round }}%"></div>
+                </div>
+                <p class="text-[11px] text-emerald-700 mt-2 font-medium">Status: Optimal Green Tier</p>
+            </div>
+
+            <!-- Room Transfer Help -->
+            <div class="p-5 rounded-2xl bg-slate-50 border border-slate-100">
+                <h3 class="font-bold text-xs uppercase tracking-wider text-slate-500 mb-2">Request Room Change</h3>
+                <p class="text-xs text-slate-600 leading-relaxed">
+                    Need to transfer blocks or request special accommodation? File a request to the Warden office.
+                </p>
+                <a href="{{ url_for('student.issues') }}" class="inline-flex items-center gap-1.5 mt-3 text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:underline">
+                    <span>Contact Warden</span>
+                    <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Roommates Section -->
+        <div class="mt-8">
+            <h3 class="font-bold text-sm text-slate-800 mb-3">Roommates</h3>
+            {% if roommates %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {% for rm in roommates %}
+                <div class="p-4 rounded-2xl bg-white border border-slate-200 flex items-center gap-3.5">
+                    <div class="w-11 h-11 rounded-2xl bg-emerald-600 text-white font-bold flex items-center justify-center text-sm shadow-xs">
+                        {{ rm.name[0] }}
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-slate-800">{{ rm.name }}</p>
+                        <p class="text-xs text-slate-400">{{ rm.student_id_num or 'Student' }} &bull; {{ rm.email }}</p>
+                        <p class="text-xs text-emerald-600 mt-0.5">{{ rm.phone or 'No phone listed' }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-xs text-slate-400 p-4 bg-slate-50 rounded-xl">You are currently the only resident in this room.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Room Booking Interface (For Unallocated Students) -->
+    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xs">
+        <div class="max-w-xl">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 mb-2">
+                Unallocated Student
+            </span>
+            <h2 class="text-2xl font-black text-slate-800">Select & Book Your Room</h2>
+            <p class="text-sm text-slate-500 mt-1">Browse open hostel rooms with available vacancies and reserve your bed.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-6">
+            {% for r in available_rooms %}
+            <div class="p-5 rounded-2xl border border-slate-200 hover:border-emerald-500 hover:shadow-md transition bg-slate-50/50 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                            {{ r.capacity - r.occupants|length }} slots left
+                        </span>
+                        <span class="text-xs text-slate-400 font-semibold">Floor {{ r.floor }}</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 mt-2">Room {{ r.room_number }}</h3>
+                    <p class="text-xs text-slate-500">{{ r.block }}</p>
+                    <p class="text-xs font-medium text-emerald-700 mt-2">{{ r.room_type }}</p>
+                    
+                    <div class="mt-4 pt-3 border-t border-slate-200/60 text-[11px] text-slate-600 space-y-1">
+                        <p>Total Capacity: {{ r.capacity }} students</p>
+                        <p>Occupants: {{ r.occupants|length }} registered</p>
+                    </div>
+                </div>
+
+                <form method="POST" action="{{ url_for('student.book_room') }}" class="mt-5">
+                    <input type="hidden" name="room_id" value="{{ r.id }}">
+                    <button type="submit" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition">
+                        Confirm & Book Room {{ r.room_number }}
+                    </button>
+                </form>
+            </div>
+            {% else %}
+            <div class="col-span-3 text-center py-12">
+                <i data-lucide="alert-circle" class="w-12 h-12 text-slate-300 mx-auto mb-3"></i>
+                <h4 class="text-base font-bold text-slate-700">No Open Rooms Available</h4>
+                <p class="text-xs text-slate-500 mt-1">All rooms are currently full or undergoing maintenance. Please contact the warden desk.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

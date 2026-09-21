@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: hostelpulse-ai
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r requirements.txt && python seed_data.py
+    startCommand: python run_prod.py
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: PORT
+        value: 10000

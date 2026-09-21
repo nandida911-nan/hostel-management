@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block title %}Electricity & Eco-Score - HostelPulse AI{% endblock %}
+{% block header_title %}Room Electricity & Eco-Score{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Top Summary Banner -->
+    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xs">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+            <div>
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    Room IoT Sub-Meter Active
+                </span>
+                <h2 class="text-2xl font-black text-slate-800 mt-2">Room {{ room.room_number if room else 'Telemetry' }} Energy Profile</h2>
+                <p class="text-xs text-slate-500">Real-time electricity consumption monitoring and conservation optimization.</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="text-right">
+                    <p class="text-[10px] font-bold uppercase text-slate-400">Eco Score</p>
+                    <p class="text-2xl font-black text-emerald-600">88<span class="text-xs font-normal text-slate-400">/100</span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                <span class="text-slate-400 text-xs font-medium">Daily Consumption</span>
+                <p class="text-xl font-black text-slate-800 mt-1">{{ daily_usage }} <span class="text-xs font-normal text-slate-500">kWh</span></p>
+                <p class="text-[11px] text-emerald-600 mt-1 font-semibold">&darr; 14% below hostel room average</p>
+            </div>
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                <span class="text-slate-400 text-xs font-medium">Projected Monthly Bill</span>
+                <p class="text-xl font-black text-slate-800 mt-1">${{ (daily_usage * 30 * 0.15)|round(2) }}</p>
+                <p class="text-[11px] text-slate-500 mt-1">Calculated at $0.15 / kWh grid tariff</p>
+            </div>
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                <span class="text-slate-400 text-xs font-medium">Carbon Footprint</span>
+                <p class="text-xl font-black text-slate-800 mt-1">{{ (daily_usage * 30 * 0.42)|round(1) }} <span class="text-xs font-normal text-slate-500">kg CO2/mo</span></p>
+                <p class="text-[11px] text-emerald-600 mt-1 font-semibold">Clean Energy Tier: Grade A</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart: 7-Day Usage Trend -->
+    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xs">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <h3 class="font-bold text-sm text-slate-800">Past 7 Days Electricity Consumption</h3>
+                <p class="text-xs text-slate-400">Daily kWh monitored via smart digital sub-meter</p>
+            </div>
+            <span class="text-xs px-2.5 py-1 rounded-full bg-slate-100 font-mono text-slate-600 font-semibold">Room {{ room.room_number if room else 'N/A' }}</span>
+        </div>
+        <div class="h-64">
+            <canvas id="roomWeeklyChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Energy Optimization Challenges & Badges -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs">
+            <h3 class="font-bold text-sm text-slate-800 mb-3 flex items-center gap-2">
+                <i data-lucide="award" class="w-5 h-5 text-amber-500"></i>
+                <span>Green Hostel Student Badges</span>
+            </h3>
+            <div class="space-y-3">
+                <div class="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-lg">🌱</div>
+                    <div>
+                        <p class="text-xs font-bold text-slate-800">Off-Peak Champion</p>
+                        <p class="text-[11px] text-slate-500">Zero heavy appliances operated between 06:00 - 08:30 PM</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                    <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-lg">❄️</div>
+                    <div>
+                        <p class="text-xs font-bold text-slate-800">24°C Climate Hero</p>
+                        <p class="text-[11px] text-slate-500">Maintained optimal energy setpoint for 5 consecutive days</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs">
+            <h3 class="font-bold text-sm text-slate-800 mb-3 flex items-center gap-2">
+                <i data-lucide="zap-off" class="w-5 h-5 text-emerald-600"></i>
+                <span>Actionable Power Saving Directives</span>
+            </h3>
+            <ul class="space-y-2 text-xs text-slate-600">
+                <li class="p-2.5 rounded-xl bg-slate-50 flex items-start gap-2">
+                    <i data-lucide="check" class="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5"></i>
+                    <span>Always turn off room lights and ceiling fans when leaving for classes or meals.</span>
+                </li>
+                <li class="p-2.5 rounded-xl bg-slate-50 flex items-start gap-2">
+                    <i data-lucide="check" class="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5"></i>
+                    <span>Unplug laptop and phone adapters when fully charged to prevent vampire drain.</span>
+                </li>
+                <li class="p-2.5 rounded-xl bg-slate-50 flex items-start gap-2">
+                    <i data-lucide="check" class="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5"></i>
+                    <span>Utilize natural window daylight during morning and afternoon study hours.</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const ctx = document.getElementById('roomWeeklyChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ days|tojson }},
+            datasets: [{
+                label: 'Room Electricity (kWh)',
+                data: {{ weekly_usage|tojson }},
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.35,
+                pointRadius: 5,
+                pointBackgroundColor: '#10b981'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    grid: { color: '#f1f5f9' },
+                    ticks: { font: { size: 11 } }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { size: 11 } }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

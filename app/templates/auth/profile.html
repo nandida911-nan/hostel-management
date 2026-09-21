@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}User Profile - HostelPulse AI{% endblock %}
+{% block header_title %}User Profile{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
+        <div class="flex items-center gap-4 pb-6 border-b border-slate-100">
+            <div class="w-16 h-16 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-bold text-2xl shadow-md">
+                {{ current_user.name[0] }}
+            </div>
+            <div>
+                <h3 class="text-xl font-bold text-slate-800">{{ current_user.name }}</h3>
+                <p class="text-xs text-slate-500">{{ current_user.email }}</p>
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold mt-2 {{ 'bg-purple-100 text-purple-700' if current_user.is_warden else 'bg-blue-100 text-blue-700' }}">
+                    {{ current_user.role.upper() }}
+                </span>
+            </div>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.profile') }}" class="mt-6 space-y-4">
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Full Name</label>
+                <input type="text" name="name" value="{{ current_user.name }}" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30">
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Email Address (Read-only)</label>
+                <input type="email" value="{{ current_user.email }}" readonly class="w-full px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-sm text-slate-500 cursor-not-allowed">
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Phone Number</label>
+                <input type="tel" name="phone" value="{{ current_user.phone or '' }}" placeholder="+1 (555) 000-0000" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30">
+            </div>
+
+            {% if current_user.is_student %}
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Student Roll / ID</label>
+                <input type="text" name="student_id_num" value="{{ current_user.student_id_num or '' }}" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30">
+            </div>
+
+            <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+                <p class="text-xs font-bold text-emerald-800 uppercase tracking-wider">Allocated Room Information</p>
+                {% if current_user.room %}
+                <p class="text-sm font-semibold text-slate-800 mt-1">Room {{ current_user.room.room_number }} ({{ current_user.room.block }}, Floor {{ current_user.room.floor }})</p>
+                <p class="text-xs text-slate-600">Type: {{ current_user.room.room_type }} | Room Capacity: {{ current_user.room.capacity }} students</p>
+                {% else %}
+                <p class="text-sm text-slate-600 mt-1">No room allocated yet. You can apply for an available room in the Room Booking tab.</p>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <div class="pt-4 border-t border-slate-100">
+                <h4 class="text-sm font-bold text-slate-800 mb-3">Change Password (Optional)</h4>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">New Password</label>
+                    <input type="password" name="new_password" placeholder="Leave blank to keep current password" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30">
+                </div>
+            </div>
+
+            <button type="submit" class="py-2.5 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold shadow-sm transition mt-4">
+                Save Profile Changes
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

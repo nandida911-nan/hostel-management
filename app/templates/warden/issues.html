@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}Issue Desk - HostelPulse AI{% endblock %}
+{% block header_title %}Grievance & Issue Desk{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h2 class="text-xl font-black text-slate-800 tracking-tight">Hostel Grievances & Facility Issues</h2>
+            <p class="text-xs text-slate-500 mt-1">Review urgent safety complaints, facility damages, electrical disruptions, and post resolutions.</p>
+        </div>
+        <span class="px-3.5 py-1.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 self-start sm:self-auto">
+            {{ issues|length }} Issues Reported
+        </span>
+    </div>
+
+    <!-- Filters -->
+    <div class="flex items-center gap-2 overflow-x-auto pb-2">
+        <a href="{{ url_for('warden.issues', status='all') }}" class="px-3 py-1.5 rounded-xl text-xs font-bold transition {{ 'bg-slate-900 text-white' if status_filter == 'all' else 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50' }}">
+            All
+        </a>
+        <a href="{{ url_for('warden.issues', status='open') }}" class="px-3 py-1.5 rounded-xl text-xs font-bold transition {{ 'bg-amber-500 text-white' if status_filter == 'open' else 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50' }}">
+            Open
+        </a>
+        <a href="{{ url_for('warden.issues', status='under_review') }}" class="px-3 py-1.5 rounded-xl text-xs font-bold transition {{ 'bg-blue-600 text-white' if status_filter == 'under_review' else 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50' }}">
+            Under Review
+        </a>
+        <a href="{{ url_for('warden.issues', status='resolved') }}" class="px-3 py-1.5 rounded-xl text-xs font-bold transition {{ 'bg-emerald-600 text-white' if status_filter == 'resolved' else 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50' }}">
+            Resolved
+        </a>
+    </div>
+
+    <!-- Issues List -->
+    <div class="space-y-4">
+        {% for issue in issues %}
+        <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs hover:border-slate-300 transition">
+            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 pb-4 border-b border-slate-100">
+                <div class="flex items-start gap-3.5">
+                    <div class="w-10 h-10 rounded-2xl {{ 'bg-rose-100 text-rose-700' if issue.urgency == 'critical' else ('bg-amber-100 text-amber-700' if issue.urgency == 'urgent' else 'bg-slate-100 text-slate-700') }} flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <i data-lucide="alert-octagon" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h3 class="text-base font-bold text-slate-800">{{ issue.title }}</h3>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase {{ 'bg-rose-100 text-rose-800' if issue.urgency == 'critical' else ('bg-amber-100 text-amber-800' if issue.urgency == 'urgent' else 'bg-slate-100 text-slate-700') }}">
+                                {{ issue.urgency }}
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-1">
+                            Reported by <strong>{{ issue.student.name }}</strong> &bull; Location: <strong class="text-slate-700">{{ issue.location }}</strong> &bull; Category: <span class="capitalize">{{ issue.category.replace('_', ' ') }}</span>
+                        </p>
+                    </div>
+                </div>
+
+                <span class="px-3 py-1 rounded-full text-xs font-bold self-start sm:self-auto {{ 'bg-emerald-100 text-emerald-800' if issue.status == 'resolved' else ('bg-blue-100 text-blue-800' if issue.status == 'under_review' else 'bg-amber-100 text-amber-800') }}">
+                    {{ issue.status.replace('_', ' ').upper() }}
+                </span>
+            </div>
+
+            <p class="text-xs text-slate-600 mt-4 leading-relaxed">{{ issue.description }}</p>
+
+            <!-- Warden Resolution Form -->
+            <form method="POST" action="{{ url_for('warden.resolve_issue', issue_id=issue.id) }}" class="mt-4 p-4 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-3">
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                    <div class="sm:w-48 flex-shrink-0">
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Update Status</label>
+                        <select name="status" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold">
+                            <option value="open" {% if issue.status == 'open' %}selected{% endif %}>Open</option>
+                            <option value="under_review" {% if issue.status == 'under_review' %}selected{% endif %}>Under Review</option>
+                            <option value="resolved" {% if issue.status == 'resolved' %}selected{% endif %}>Resolved</option>
+                        </select>
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Official Warden Response</label>
+                        <input type="text" name="response" value="{{ issue.warden_response or '' }}" placeholder="e.g. Electrician dispatched / Noise warning issued" class="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs">
+                    </div>
+                    <div class="self-end sm:self-auto sm:mt-5">
+                        <button type="submit" class="px-5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition shadow-xs">
+                            Submit Response
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        {% else %}
+        <div class="bg-white rounded-3xl p-12 text-center border border-slate-200">
+            <i data-lucide="check-circle" class="w-12 h-12 text-slate-300 mx-auto mb-3"></i>
+            <h3 class="text-base font-bold text-slate-700">No Issues Found</h3>
+            <p class="text-xs text-slate-400 mt-1">No reported issues in this category.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

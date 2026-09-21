@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block title %}Maintenance Tickets - HostelPulse AI{% endblock %}
+{% block header_title %}Maintenance & Repairs{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header with Create Button -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-xs">
+        <div>
+            <h2 class="text-xl font-black text-slate-800 tracking-tight">Maintenance Tickets</h2>
+            <p class="text-xs text-slate-500 mt-1">Report electrical, appliance, furniture, or facility issues for prompt repair.</p>
+        </div>
+        <button onclick="document.getElementById('new-ticket-modal').showModal()" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            <span>Log New Ticket</span>
+        </button>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="flex items-center gap-2 overflow-x-auto pb-2">
+        <a href="{{ url_for('student.tickets', status='all') }}" class="px-3 py-1.5 rounded-xl text-xs font-bold transition {{ 'bg-slate-900 text-white shadow-xs' if status_filter == 'all' else 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50' }}">
+            All Tickets
+        </a>
+        <a href="{{ url_for('student.tickets', status='pending') }}" class="px-3 py-1.5 rounded-xl text-xs font-bold transition {{ 'bg-amber-500 text-white shadow-xs' if status_filter == 'pending' else 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50' }}">
+            Pending
+        </a>
+        <a href="{{ url_for('student.tickets', status='in_progress') }}" class="px-3 py-1.5 rounded-xl text-xs font-bold transition {{ 'bg-blue-600 text-white shadow-xs' if status_filter == 'in_progress' else 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50' }}">
+            In Progress
+        </a>
+        <a href="{{ url_for('student.tickets', status='resolved') }}" class="px-3 py-1.5 rounded-xl text-xs font-bold transition {{ 'bg-emerald-600 text-white shadow-xs' if status_filter == 'resolved' else 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50' }}">
+            Resolved
+        </a>
+    </div>
+
+    <!-- Tickets List -->
+    <div class="space-y-4">
+        {% for ticket in tickets %}
+        <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs hover:border-slate-300 transition">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-slate-100 text-slate-700 flex items-center justify-center">
+                        <i data-lucide="wrench" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h3 class="font-bold text-sm text-slate-800">{{ ticket.title }}</h3>
+                            <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600">{{ ticket.ticket_number }}</span>
+                        </div>
+                        <p class="text-xs text-slate-400 capitalize mt-0.5">{{ ticket.category }} &bull; Priority: {{ ticket.priority }} &bull; Logged {{ ticket.created_at.strftime('%b %d, %Y at %H:%M') }}</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="px-3 py-1 rounded-full text-xs font-bold {{ 'bg-emerald-100 text-emerald-800' if ticket.status == 'resolved' else ('bg-blue-100 text-blue-800' if ticket.status == 'in_progress' else 'bg-amber-100 text-amber-800') }}">
+                        {{ ticket.status.replace('_', ' ').upper() }}
+                    </span>
+                </div>
+            </div>
+
+            <p class="text-xs text-slate-600 mt-4 leading-relaxed">{{ ticket.description }}</p>
+
+            {% if ticket.technician_name or ticket.technician_notes %}
+            <div class="mt-4 p-3.5 rounded-2xl bg-slate-50 border border-slate-100 text-xs">
+                <div class="flex items-center gap-2 font-bold text-slate-700">
+                    <i data-lucide="user-check" class="w-4 h-4 text-emerald-600"></i>
+                    <span>Assigned Technician: {{ ticket.technician_name or 'Facility Staff' }}</span>
+                </div>
+                {% if ticket.technician_notes %}
+                <p class="text-slate-500 mt-1 pl-6">{{ ticket.technician_notes }}</p>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="bg-white rounded-3xl p-12 text-center border border-slate-200">
+            <i data-lucide="check-circle-2" class="w-12 h-12 text-slate-300 mx-auto mb-3"></i>
+            <h3 class="text-base font-bold text-slate-700">No Tickets Found</h3>
+            <p class="text-xs text-slate-400 mt-1">You have no maintenance requests matching this filter.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Modal: New Ticket Dialog -->
+<dialog id="new-ticket-modal" class="rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl border border-slate-200">
+    <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+        <h3 class="text-lg font-black text-slate-800">Log Maintenance Ticket</h3>
+        <button onclick="document.getElementById('new-ticket-modal').close()" class="p-1 rounded-lg text-slate-400 hover:text-slate-600">
+            <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+    </div>
+
+    <form method="POST" action="{{ url_for('student.tickets') }}" class="mt-4 space-y-4">
+        <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Issue Title</label>
+            <input type="text" name="title" required placeholder="e.g. Study lamp switch sparking / AC not cooling" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Category</label>
+                <select name="category" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30">
+                    <option value="electrical">⚡ Electrical & Wiring</option>
+                    <option value="ac_cooling">❄️ AC & Climate Control</option>
+                    <option value="appliances">🔌 Room Appliances</option>
+                    <option value="furniture">🪑 Furniture & Carpentry</option>
+                    <option value="wifi_network">📶 WiFi & LAN Network</option>
+                    <option value="door_lock">🔒 Door Lock & Security</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Urgency / Priority</label>
+                <select name="priority" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30">
+                    <option value="low">Low (Non-urgent)</option>
+                    <option value="medium" selected>Medium (Standard)</option>
+                    <option value="high">High (Prompt action)</option>
+                    <option value="critical">Critical (Emergency)</option>
+                </select>
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Detailed Description</label>
+            <textarea name="description" rows="3" required placeholder="Describe what went wrong and when you noticed it..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30"></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+            <button type="button" onclick="document.getElementById('new-ticket-modal').close()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100">Cancel</button>
+            <button type="submit" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition">Submit Ticket</button>
+        </div>
+    </form>
+</dialog>
+{% endblock %}
