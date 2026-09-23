@@ -12,11 +12,20 @@ class Config:
     if db_url and db_url.startswith('postgres://'):
         db_url = db_url.replace('postgres://', 'postgresql://', 1)
     
-    SQLALCHEMY_DATABASE_URI = db_url or f"sqlite:///{os.path.join(basedir, 'instance', 'hostel.db')}"
+    if db_url:
+        SQLALCHEMY_DATABASE_URI = db_url
+    elif os.environ.get('VERCEL'):
+        SQLALCHEMY_DATABASE_URI = 'sqlite:////tmp/hostel.db'
+    else:
+        SQLALCHEMY_DATABASE_URI = f"sqlite:///{os.path.join(basedir, 'instance', 'hostel.db')}"
+    
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
-    # ML model storage
-    ML_MODEL_PATH = os.path.join(basedir, 'app', 'ml_engine', 'models')
+    # ML model storage (writable /tmp on Vercel)
+    if os.environ.get('VERCEL'):
+        ML_MODEL_PATH = '/tmp/models'
+    else:
+        ML_MODEL_PATH = os.path.join(basedir, 'app', 'ml_engine', 'models')
     
     # Hostel Specific Constants
     TARIFF_PER_KWH = 0.15  # standard average tariff ($ / ₹ per kWh)
