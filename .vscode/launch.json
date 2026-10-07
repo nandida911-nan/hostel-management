@@ -6,6 +6,7 @@
       "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/run_prod.py",
+      "python": "C:\\Users\\Nandida K\\AppData\\Local\\Programs\\Python\\Python314\\python.exe",
       "console": "integratedTerminal",
       "justMyCode": true
     }
