@@ -5,12 +5,18 @@ from app import create_app
 from app.models import db, User, Room, MaintenanceTicket, OutPass, IssueReport, ElectricityLog, OptimizationAlert
 from app.ml_engine import forecaster
 
-def seed_database():
-    app = create_app()
+def seed_database(app_instance=None, drop_existing=False):
+    app = app_instance or create_app()
     with app.app_context():
-        print("[SETUP] Dropping and recreating database schema...")
-        db.drop_all()
-        db.create_all()
+        if drop_existing:
+            print("[SETUP] Dropping and recreating database schema...")
+            db.drop_all()
+            db.create_all()
+        else:
+            db.create_all()
+            if User.query.first():
+                print("[INFO] Database already contains records. Skipping seed.")
+                return
 
         print("[ROOMS] Seeding hostel rooms...")
         rooms = [
@@ -266,4 +272,4 @@ def seed_database():
         print("[SUCCESS] Database successfully seeded and ML models ready!")
 
 if __name__ == '__main__':
-    seed_database()
+    seed_database(drop_existing=True)

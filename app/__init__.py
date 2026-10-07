@@ -17,7 +17,12 @@ def create_app(config_name=None):
     if config_name is None:
         config_name = os.environ.get('FLASK_ENV', 'development')
         
-    app = Flask(__name__)
+    base_dir = os.path.abspath(os.path.dirname(__file__))
+    app = Flask(
+        __name__,
+        template_folder=os.path.join(base_dir, 'templates'),
+        static_folder=os.path.join(base_dir, 'static')
+    )
     app.config.from_object(config.get(config_name, config['default']))
     
     # Ensure instance folder exists

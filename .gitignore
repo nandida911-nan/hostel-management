@@ -8,6 +8,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.joblib
+!app/ml_engine/models/*.joblib
 .pytest_cache/
 
 # Local Environment Secrets (never push production keys)
