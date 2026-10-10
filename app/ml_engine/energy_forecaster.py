@@ -3,8 +3,49 @@ import joblib
 import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
-from sklearn.ensemble import RandomForestRegressor, IsolationForest
-from sklearn.preprocessing import StandardScaler
+try:
+    from sklearn.ensemble import RandomForestRegressor, IsolationForest
+    from sklearn.preprocessing import StandardScaler
+    SKLEARN_AVAILABLE = True
+except (ImportError, Exception) as e:
+    SKLEARN_AVAILABLE = False
+    RandomForestRegressor = None
+    IsolationForest = None
+    StandardScaler = None
+    print(f"[ML NOTICE] Scikit-learn C-extension or DLL unavailable: {e}. Using pure-Python resilient fallback engine.")
+
+class FallbackScaler:
+    def fit(self, X):
+        return self
+    def transform(self, X):
+        return np.array(X, dtype=float)
+    def fit_transform(self, X):
+        return np.array(X, dtype=float)
+
+class FallbackRegressor:
+    def fit(self, X, y):
+        return self
+    def predict(self, X):
+        X = np.array(X)
+        preds = []
+        for row in X:
+            hour = row[0] if len(row) > 0 else 12
+            occupancy = row[4] if len(row) > 4 else 0.8
+            temp = row[5] if len(row) > 5 else 27.0
+            block_id = row[6] if len(row) > 6 else 0
+            base = 12.0 + (block_id * 2.5) + (occupancy * 10.0) + max(0.0, temp - 24.0) * 0.8
+            if (6 <= hour <= 8) or (18 <= hour <= 23):
+                base *= 1.45
+            elif 1 <= hour <= 5:
+                base *= 0.55
+            preds.append(max(2.0, float(base)))
+        return np.array(preds)
+
+class FallbackAnomalyDetector:
+    def fit(self, X):
+        return self
+    def predict(self, X):
+        return np.ones(len(X), dtype=int)
 
 class EnergyForecaster:
     def __init__(self, model_dir=None):
@@ -29,6 +70,9 @@ class EnergyForecaster:
 
     def _load_from_disk_if_exists(self):
         """Attempts to load pre-trained models from disk without throwing errors."""
+        if not SKLEARN_AVAILABLE:
+            self._init_fallback_models()
+            return True
         try:
             if (os.path.exists(self.regressor_path) and 
                 os.path.exists(self.anomaly_path) and 
@@ -39,6 +83,8 @@ class EnergyForecaster:
                 return True
         except Exception as e:
             print("[ML NOTICE] Could not load model from disk:", e)
+            self._init_fallback_models()
+            return True
         return False
 
     def _generate_synthetic_historical_data(self, days=90):
@@ -112,6 +158,10 @@ class EnergyForecaster:
 
     def train_models(self):
         """Train compact, high-performance RandomForest regressor and IsolationForest."""
+        if not SKLEARN_AVAILABLE or StandardScaler is None or RandomForestRegressor is None:
+            self._init_fallback_models()
+            return
+
         df = self._generate_synthetic_historical_data(days=60)
         
         feature_cols = ['hour', 'day_of_week', 'is_weekend', 'is_exam_period', 'occupancy_rate', 'ambient_temp', 'block_encoded']
@@ -150,12 +200,20 @@ class EnergyForecaster:
 
     def _init_fallback_models(self):
         """Creates instant in-memory fallback models if full training cannot execute."""
-        np.random.seed(42)
-        X_dummy = np.random.rand(100, 7)
-        y_dummy = 15.0 + 5.0 * X_dummy[:, 0]
-        self.scaler = StandardScaler().fit(X_dummy)
-        self.regressor = RandomForestRegressor(n_estimators=5, max_depth=4, random_state=42).fit(self.scaler.transform(X_dummy), y_dummy)
-        self.anomaly_detector = IsolationForest(n_estimators=5, random_state=42).fit(self.scaler.transform(X_dummy))
+        if SKLEARN_AVAILABLE and StandardScaler is not None and RandomForestRegressor is not None:
+            try:
+                np.random.seed(42)
+                X_dummy = np.random.rand(100, 7)
+                y_dummy = 15.0 + 5.0 * X_dummy[:, 0]
+                self.scaler = StandardScaler().fit(X_dummy)
+                self.regressor = RandomForestRegressor(n_estimators=5, max_depth=4, random_state=42).fit(self.scaler.transform(X_dummy), y_dummy)
+                self.anomaly_detector = IsolationForest(n_estimators=5, random_state=42).fit(self.scaler.transform(X_dummy))
+                return
+            except Exception:
+                pass
+        self.scaler = FallbackScaler()
+        self.regressor = FallbackRegressor()
+        self.anomaly_detector = FallbackAnomalyDetector()
 
     def _ensure_models_trained(self):
         """Load trained models or train fast model if not already loaded."""
